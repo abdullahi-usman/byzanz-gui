@@ -348,6 +348,7 @@ void start_record_clicked_cb(GtkWidget *button,
       g_free(args);
       g_free(delay);
       g_free(duration);
+      g_array_unref(argument_builder);
     }
 
   g_object_unref(save_path);

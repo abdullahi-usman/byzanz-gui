@@ -32,9 +32,11 @@ struct _ByzanzGuiWindow {
   GtkButton           *cancel;
   GtkButton           *start_record;
 
+  GtkRadioButton      *whole_screen;
+  GtkRadioButton      *current_screen;
+
   GtkCheckButton      *audio;
   GtkCheckButton      *cursor;
-  GtkCheckButton      *active_window;
   GtkCheckButton      *ctrl_alt_r;
 
   GtkSpinButton       *delay;
@@ -46,7 +48,7 @@ struct _ByzanzGuiWindow {
 
   GSubprocess         *process;
 
-  RecordStatus         record_status;
+  RecordStatus record_status;
 };
 
 G_DEFINE_TYPE(ByzanzGuiWindow, byzanz_gui_window, GTK_TYPE_APPLICATION_WINDOW)
@@ -87,7 +89,7 @@ static gboolean process_key_events(GtkWidget *button, GdkEvent *event, gpointer 
 
   return FALSE;
 }
-static GdkWindow *get_root_window (ByzanzGuiWindow *self)
+static GdkWindow *get_root_window(ByzanzGuiWindow *self)
 {
   GdkScreen *screen;
   GdkWindow *window;
@@ -102,7 +104,7 @@ static GdkSeat* get_seat(ByzanzGuiWindow *self)
 {
   GdkSeat *seat;
 
-  seat = gdk_display_get_default_seat(gdk_window_get_display(get_root_window (self)));
+  seat = gdk_display_get_default_seat(gdk_window_get_display(get_root_window(self)));
 
   return seat;
 }
@@ -147,14 +149,15 @@ void on_process_finish(GObject *source_object,
   ByzanzGuiWindow *self;
   GtkDialog *dialog;
   GtkResponseType status;
-  GtkWidget *message;
+  GtkLabel *message;
 
   self = BYZANZ_GUI_WINDOW(user_data);
 
   if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(self->ctrl_alt_r)))
     ungrab_keyboard_events(self);
 
-  message = gtk_label_new("Recording finished successfully...\nWould you like to record again ?");
+  message = GTK_LABEL (gtk_label_new(NULL));
+  gtk_label_set_markup (message, g_markup_printf_escaped ("Recording finished successfully...\nWould you like to record again ?\n<a href=\"file://%s\">Open File</a>", gtk_entry_get_text (self->save_file)));
 
   self->record_status = NOT_RECORDING;
   gtk_widget_set_state_flags(GTK_WIDGET(self->start_record), GTK_STATE_FLAG_NORMAL, TRUE);
@@ -162,8 +165,8 @@ void on_process_finish(GObject *source_object,
 
   dialog = GTK_DIALOG(gtk_dialog_new_with_buttons("Recording Finished", GTK_WINDOW(self), GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT, "No", GTK_RESPONSE_NO, "Yes", GTK_RESPONSE_YES, "Delete Recording", GTK_RESPONSE_APPLY, NULL));
 
-  gtk_container_add(GTK_CONTAINER(gtk_dialog_get_content_area(dialog)), message);
-  gtk_widget_show(message);
+  gtk_container_add(GTK_CONTAINER(gtk_dialog_get_content_area(dialog)), GTK_WIDGET (message));
+  gtk_widget_show(GTK_WIDGET(message));
 
   status = gtk_dialog_run(dialog);
 
@@ -183,34 +186,34 @@ void on_process_finish(GObject *source_object,
   gtk_widget_destroy(GTK_WIDGET(dialog));
 }
 
-static GdkRectangle get_active_window_area (ByzanzGuiWindow *self)
+static GdkRectangle get_active_window_area(ByzanzGuiWindow *self)
 {
   GdkWindow *active_window;
   GList *windows;
-  GdkRectangle rect = {-1, -1, -1, -1};
+  GdkRectangle rect = { -1, -1, -1, -1 };
 
-  windows = gdk_screen_get_window_stack (gdk_window_get_screen (get_root_window (self)));
+  windows = gdk_screen_get_window_stack(gdk_window_get_screen(get_root_window(self)));
 
   while (TRUE)
     {
       if (windows->next == NULL || windows->next->next == NULL)
         break;
 
-       windows = windows->next;
+      windows = windows->next;
     }
 
   active_window = windows->data;
 
   if (active_window != NULL)
     {
-      rect.width = gdk_window_get_width (active_window);
-      rect.height = gdk_window_get_height (active_window);
+      rect.width = gdk_window_get_width(active_window);
+      rect.height = gdk_window_get_height(active_window);
 
-      gdk_window_get_root_origin (active_window, &rect.x, &rect.y);
+      gdk_window_get_root_origin(active_window, &rect.x, &rect.y);
     }
 
-  g_list_free (windows);
-  g_object_unref (active_window);
+  g_list_free(windows);
+  g_object_unref(active_window);
   return rect;
 }
 
@@ -251,6 +254,7 @@ void start_record_clicked_cb(GtkWidget *button,
       GArray *argument_builder;
       const gchar **args;
       const size_t BUFSIZE = sizeof(gchar) * 24;
+      gboolean grab_current_screen;
 
       prog_name = "byzanz-record";
       verbose = "--verbose";
@@ -288,7 +292,8 @@ void start_record_clicked_cb(GtkWidget *button,
       g_array_append_val(argument_builder, delay);
       g_array_append_val(argument_builder, duration);
 
-      if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(self->active_window)))
+      grab_current_screen = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(self->current_screen));
+      if (grab_current_screen)
         {
           GdkRectangle active_window;
 
@@ -350,10 +355,14 @@ void start_record_clicked_cb(GtkWidget *button,
             grab_keyboard_events(self);
         }
 
-      free(x);
-      free(y);
-      free(width);
-      free(height);
+      if (grab_current_screen)
+        {
+          free(x);
+          free(y);
+          free(width);
+          free(height);
+        }
+
       free(args);
       free(delay);
       free(duration);
@@ -371,10 +380,11 @@ byzanz_gui_window_class_init(ByzanzGuiWindowClass *klass)
   gtk_widget_class_set_template_from_resource(widget_class, "/org/gnome/Byzanz-Gui/byzanz-gui-window.ui");
   gtk_widget_class_bind_template_child(widget_class, ByzanzGuiWindow, header_bar);
   gtk_widget_class_bind_template_child(widget_class, ByzanzGuiWindow, cancel);
+  gtk_widget_class_bind_template_child(widget_class, ByzanzGuiWindow, whole_screen);
+  gtk_widget_class_bind_template_child(widget_class, ByzanzGuiWindow, current_screen);
   gtk_widget_class_bind_template_child(widget_class, ByzanzGuiWindow, start_record);
   gtk_widget_class_bind_template_child(widget_class, ByzanzGuiWindow, audio);
   gtk_widget_class_bind_template_child(widget_class, ByzanzGuiWindow, cursor);
-  gtk_widget_class_bind_template_child(widget_class, ByzanzGuiWindow, active_window);
   gtk_widget_class_bind_template_child(widget_class, ByzanzGuiWindow, ctrl_alt_r);
   gtk_widget_class_bind_template_child(widget_class, ByzanzGuiWindow, delay);
   gtk_widget_class_bind_template_child(widget_class, ByzanzGuiWindow, duration);

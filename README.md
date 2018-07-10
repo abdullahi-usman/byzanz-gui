@@ -14,5 +14,5 @@ sudo ninja -C build install
 Alternatively use can use <a href="https://wiki.gnome.org/Apps/Builder">Gnome-Builder IDE</a>.
 
 ### Requirements
-byzanz
+byzanz,
 gtk+-3.0 >= 3.22

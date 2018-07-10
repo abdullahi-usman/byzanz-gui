@@ -34,6 +34,7 @@ struct _ByzanzGuiWindow {
 
   GtkCheckButton      *audio;
   GtkCheckButton      *cursor;
+  GtkCheckButton      *active_window;
   GtkCheckButton      *ctrl_alt_r;
 
   GtkSpinButton       *delay;
@@ -86,20 +87,26 @@ static gboolean process_key_events(GtkWidget *button, GdkEvent *event, gpointer 
 
   return FALSE;
 }
-
-static GdkSeat* get_seat(ByzanzGuiWindow *self)
+static GdkWindow *get_root_window (ByzanzGuiWindow *self)
 {
   GdkScreen *screen;
   GdkWindow *window;
-  GdkSeat *seat;
-
 
   screen = gtk_window_get_screen(GTK_WINDOW(self));
   window = gdk_screen_get_root_window(screen);
-  seat = gdk_display_get_default_seat(gdk_window_get_display(window));
+
+  return window;
+}
+
+static GdkSeat* get_seat(ByzanzGuiWindow *self)
+{
+  GdkSeat *seat;
+
+  seat = gdk_display_get_default_seat(gdk_window_get_display(get_root_window (self)));
 
   return seat;
 }
+
 static void grab_keyboard_events(ByzanzGuiWindow *self)
 {
   GdkGrabStatus grab_status;
@@ -176,6 +183,37 @@ void on_process_finish(GObject *source_object,
   gtk_widget_destroy(GTK_WIDGET(dialog));
 }
 
+static GdkRectangle get_active_window_area (ByzanzGuiWindow *self)
+{
+  GdkWindow *active_window;
+  GList *windows;
+  GdkRectangle rect = {-1, -1, -1, -1};
+
+  windows = gdk_screen_get_window_stack (gdk_window_get_screen (get_root_window (self)));
+
+  while (TRUE)
+    {
+      if (windows->next == NULL || windows->next->next == NULL)
+        break;
+
+       windows = windows->next;
+    }
+
+  active_window = windows->data;
+
+  if (active_window != NULL)
+    {
+      rect.width = gdk_window_get_width (active_window);
+      rect.height = gdk_window_get_height (active_window);
+
+      gdk_window_get_root_origin (active_window, &rect.x, &rect.y);
+    }
+
+  g_list_free (windows);
+  g_object_unref (active_window);
+  return rect;
+}
+
 void start_record_clicked_cb(GtkWidget *button,
                              gpointer data)
 {
@@ -204,11 +242,10 @@ void start_record_clicked_cb(GtkWidget *button,
 
       if (error != NULL)
         g_log(NULL, G_LOG_LEVEL_WARNING, "pyzanz-gui: %s", error->message);
-
     }
   else
     {
-      gchar *delay, *duration;
+      gchar *delay, *duration, *x, *y, *width, *height;
       const gchar *verbose, *audio, *cursor;
       const gchar *prog_name;
       GArray *argument_builder;
@@ -238,18 +275,49 @@ void start_record_clicked_cb(GtkWidget *button,
           g_array_append_val(argument_builder, cursor);
         }
 
-      gtk_spin_button_update (self->delay);
-      gtk_spin_button_update (self->duration);
-      
-      snprintf(delay, BUFSIZE, "--delay=%d", gtk_spin_button_get_value_as_int (self->delay));
+      gtk_spin_button_update(self->delay);
+      gtk_spin_button_update(self->duration);
 
-      snprintf(duration, BUFSIZE, "--duration=%d", gtk_spin_button_get_value_as_int (self->duration));
+      snprintf(delay, BUFSIZE, "--delay=%d", gtk_spin_button_get_value_as_int(self->delay));
+
+      snprintf(duration, BUFSIZE, "--duration=%d", gtk_spin_button_get_value_as_int(self->duration));
 
       delay = g_strstrip(delay);
       duration = g_strstrip(duration);
 
       g_array_append_val(argument_builder, delay);
       g_array_append_val(argument_builder, duration);
+
+      if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(self->active_window)))
+        {
+          GdkRectangle active_window;
+
+          active_window = get_active_window_area(self);
+
+          if (active_window.width > 0 && active_window.height > 0)
+            {
+              x = (gchar*)g_malloc0(BUFSIZ);
+              y = (gchar*)g_malloc0(BUFSIZ);
+              width = (gchar*)g_malloc0(BUFSIZ);
+              height = (gchar*)g_malloc0(BUFSIZ);
+
+              snprintf(x, BUFSIZ, "--x=%d", active_window.x);
+              snprintf(y, BUFSIZ, "--y=%d", active_window.y);
+              snprintf(width, BUFSIZ, "--width=%d", active_window.width);
+              snprintf(height, BUFSIZ, "--height=%d", active_window.height);
+
+              x = g_strstrip(x);
+              y = g_strstrip(y);
+              width = g_strstrip(width);
+              height = g_strstrip(height);
+
+              g_array_append_val(argument_builder, x);
+              g_array_append_val(argument_builder, y);
+              g_array_append_val(argument_builder, width);
+              g_array_append_val(argument_builder, height);
+            }
+        }
+
       g_array_append_val(argument_builder, save_file_name);
 
       args = (const gchar**)g_malloc(sizeof(gchar *) * argument_builder->len + 1);
@@ -282,6 +350,10 @@ void start_record_clicked_cb(GtkWidget *button,
             grab_keyboard_events(self);
         }
 
+      free(x);
+      free(y);
+      free(width);
+      free(height);
       free(args);
       free(delay);
       free(duration);
@@ -302,6 +374,7 @@ byzanz_gui_window_class_init(ByzanzGuiWindowClass *klass)
   gtk_widget_class_bind_template_child(widget_class, ByzanzGuiWindow, start_record);
   gtk_widget_class_bind_template_child(widget_class, ByzanzGuiWindow, audio);
   gtk_widget_class_bind_template_child(widget_class, ByzanzGuiWindow, cursor);
+  gtk_widget_class_bind_template_child(widget_class, ByzanzGuiWindow, active_window);
   gtk_widget_class_bind_template_child(widget_class, ByzanzGuiWindow, ctrl_alt_r);
   gtk_widget_class_bind_template_child(widget_class, ByzanzGuiWindow, delay);
   gtk_widget_class_bind_template_child(widget_class, ByzanzGuiWindow, duration);

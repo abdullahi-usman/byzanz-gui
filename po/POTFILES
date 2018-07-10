@@ -1,0 +1,7 @@
+data/org.gnome.Byzanz-Gui.desktop.in
+data/org.gnome.Byzanz-Gui.appdata.xml.in
+data/org.gnome.Byzanz-Gui.gschema.xml
+src/byzanz-gui-window.ui
+src/main.c
+src/byzanz-gui-window.c
+

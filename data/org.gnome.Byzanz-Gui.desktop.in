@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=byzanz-gui
+Exec=byzanz-gui
+Terminal=false
+Type=Application
+Categories=GTK;
+StartupNotify=true

@@ -248,12 +248,9 @@ void start_record_clicked_cb(GtkWidget *button,
     }
   else
     {
+      const gchar *prog_name, *verbose, *audio, *cursor, **args;
       gchar *delay, *duration, *x, *y, *width, *height;
-      const gchar *verbose, *audio, *cursor;
-      const gchar *prog_name;
       GArray *argument_builder;
-      const gchar **args;
-      const size_t BUFSIZE = sizeof(gchar) * 24;
       gboolean grab_current_screen;
 
       prog_name = "byzanz-record";
@@ -261,8 +258,6 @@ void start_record_clicked_cb(GtkWidget *button,
       error = NULL;
       cursor = audio = NULL;
       argument_builder = g_array_new(TRUE, TRUE, sizeof(char*));
-      duration = (gchar*)g_malloc0(BUFSIZE);
-      delay = (gchar*)g_malloc0(BUFSIZE);
 
       g_array_append_val(argument_builder, prog_name);
       g_array_append_val(argument_builder, verbose);
@@ -282,12 +277,9 @@ void start_record_clicked_cb(GtkWidget *button,
       gtk_spin_button_update(self->delay);
       gtk_spin_button_update(self->duration);
 
-      snprintf(delay, BUFSIZE, "--delay=%d", gtk_spin_button_get_value_as_int(self->delay));
+      delay = g_strdup_printf("--delay=%d", gtk_spin_button_get_value_as_int(self->delay));
 
-      snprintf(duration, BUFSIZE, "--duration=%d", gtk_spin_button_get_value_as_int(self->duration));
-
-      delay = g_strstrip(delay);
-      duration = g_strstrip(duration);
+      duration = g_strdup_printf("--duration=%d", gtk_spin_button_get_value_as_int(self->duration));
 
       g_array_append_val(argument_builder, delay);
       g_array_append_val(argument_builder, duration);
@@ -301,20 +293,10 @@ void start_record_clicked_cb(GtkWidget *button,
 
           if (active_window.width > 0 && active_window.height > 0)
             {
-              x = (gchar*)g_malloc0(BUFSIZ);
-              y = (gchar*)g_malloc0(BUFSIZ);
-              width = (gchar*)g_malloc0(BUFSIZ);
-              height = (gchar*)g_malloc0(BUFSIZ);
-
-              snprintf(x, BUFSIZ, "--x=%d", active_window.x);
-              snprintf(y, BUFSIZ, "--y=%d", active_window.y);
-              snprintf(width, BUFSIZ, "--width=%d", active_window.width);
-              snprintf(height, BUFSIZ, "--height=%d", active_window.height);
-
-              x = g_strstrip(x);
-              y = g_strstrip(y);
-              width = g_strstrip(width);
-              height = g_strstrip(height);
+              x = g_strdup_printf("--x=%d", active_window.x);
+              y = g_strdup_printf("--y=%d", active_window.y);
+              width = g_strdup_printf("--width=%d", active_window.width);
+              height = g_strdup_printf("--height=%d", active_window.height);
 
               g_array_append_val(argument_builder, x);
               g_array_append_val(argument_builder, y);
@@ -357,15 +339,15 @@ void start_record_clicked_cb(GtkWidget *button,
 
       if (grab_current_screen)
         {
-          free(x);
-          free(y);
-          free(width);
-          free(height);
+          g_free(x);
+          g_free(y);
+          g_free(width);
+          g_free(height);
         }
 
-      free(args);
-      free(delay);
-      free(duration);
+      g_free(args);
+      g_free(delay);
+      g_free(duration);
     }
 
   g_object_unref(save_path);

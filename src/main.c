@@ -17,6 +17,7 @@
  */
 
 #include <glib/gi18n.h>
+#include <locale.h>
 
 #include "byzanz-gui-config.h"
 #include "byzanz-gui-window.h"
@@ -51,6 +52,7 @@ main (int   argc,
 	int ret;
 
 	/* Set up gettext translations */
+  setlocale(LC_ALL, "");
 	bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
 	bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 	textdomain (GETTEXT_PACKAGE);

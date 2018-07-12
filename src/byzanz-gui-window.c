@@ -15,6 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#include <glib/gi18n.h>
 
 #include "byzanz-gui-config.h"
 #include "byzanz-gui-window.h"
@@ -157,13 +158,13 @@ void on_process_finish(GObject *source_object,
     ungrab_keyboard_events(self);
 
   message = GTK_LABEL (gtk_label_new(NULL));
-  gtk_label_set_markup (message, g_markup_printf_escaped ("Recording finished successfully...\nWould you like to record again ?\n<a href=\"file://%s\">Open File</a>", gtk_entry_get_text (self->save_file)));
+  gtk_label_set_markup (message, g_markup_printf_escaped (_("Recording finished successfully...\nWould you like to record again ?\n<a href=\"file://%s\">Open File</a>"), gtk_entry_get_text (self->save_file)));
 
   self->record_status = NOT_RECORDING;
   gtk_widget_set_state_flags(GTK_WIDGET(self->start_record), GTK_STATE_FLAG_NORMAL, TRUE);
   gtk_widget_set_state_flags(GTK_WIDGET(self->content), GTK_STATE_FLAG_NORMAL, TRUE);
 
-  dialog = GTK_DIALOG(gtk_dialog_new_with_buttons("Recording Finished", GTK_WINDOW(self), GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT, "No", GTK_RESPONSE_NO, "Yes", GTK_RESPONSE_YES, "Delete Recording", GTK_RESPONSE_APPLY, NULL));
+  dialog = GTK_DIALOG(gtk_dialog_new_with_buttons(_("Recording Finished"), GTK_WINDOW(self), GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT, _("No"), GTK_RESPONSE_NO, _("Yes"), GTK_RESPONSE_YES, _("Delete Recording"), GTK_RESPONSE_APPLY, NULL));
 
   gtk_container_add(GTK_CONTAINER(gtk_dialog_get_content_area(dialog)), GTK_WIDGET (message));
   gtk_widget_show(GTK_WIDGET(message));
@@ -238,7 +239,8 @@ void start_record_clicked_cb(GtkWidget *button,
     {
       GtkDialog *dialog;
 
-      dialog = GTK_DIALOG(gtk_message_dialog_new(GTK_WINDOW(self), GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT, GTK_MESSAGE_WARNING, GTK_BUTTONS_OK, "Cannot write to output directory\nCheck and try again."));
+      dialog = GTK_DIALOG(gtk_message_dialog_new(GTK_WINDOW(self), GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT, GTK_MESSAGE_WARNING, GTK_BUTTONS_OK, _("Cannot write to output directory\nCheck and try again.")));
+
 
       gtk_dialog_run(dialog);
       gtk_widget_destroy(GTK_WIDGET(dialog));

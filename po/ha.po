@@ -1,0 +1,70 @@
+# Hausa translations for PACKAGE package.
+# Copyright (C) 2018 THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# Abdullahi Usman <abdullahismn7@gmail.com>, 2018.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2018-07-12 10:17+0100\n"
+"PO-Revision-Date: 2018-07-12 10:20+0100\n"
+"Last-Translator: Abdullahi Usman <abdullahismn7@gmail.com>\n"
+"Language-Team: Hausa\n"
+"Language: ha\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=ASCII\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: data/org.gnome.Byzanz-Gui.desktop.in:3
+msgid "byzanz-gui"
+msgstr "byzanz-gui"
+
+#: src/byzanz-gui-window.ui:18 src/byzanz-gui-window.ui:21
+#: src/byzanz-gui-window.ui:222
+msgid "1"
+msgstr "1"
+
+#: src/byzanz-gui-window.ui:44
+msgid "Cancel"
+msgstr "Fita"
+
+#: src/byzanz-gui-window.ui:54
+msgid "Start Recording"
+msgstr "Fara Ricodin"
+
+#: src/byzanz-gui-window.ui:87
+msgid "Record whole screen"
+msgstr "Kayi Ricodin dukan screen"
+
+#: src/byzanz-gui-window.ui:103
+msgid "Record current screen"
+msgstr "Kayi recodin screen na gaba"
+
+#: src/byzanz-gui-window.ui:135
+msgid "Record with audio"
+msgstr "Yi recodin da murya"
+
+#: src/byzanz-gui-window.ui:149
+msgid "Record cursor"
+msgstr "Yi recodin da alkalami"
+
+#: src/byzanz-gui-window.ui:163
+msgid "Use Ctrl+Alt+R to stop"
+msgstr "Yi amfani da Ctrl+Alt+R ka dakatar"
+
+#: src/byzanz-gui-window.ui:202
+msgid "Delay (in secs)"
+msgstr "Saurara (secan)"
+
+#: src/byzanz-gui-window.ui:256
+msgid "Duration (in secs)"
+msgstr "Tsawon (secan)"
+
+#: src/byzanz-gui-window.ui:275
+msgid "10"
+msgstr "10"
+
+#: src/byzanz-gui-window.ui:318
+msgid "Save as"
+msgstr "Ajje akan"

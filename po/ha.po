@@ -31,11 +31,11 @@ msgstr "Fita"
 
 #: src/byzanz-gui-window.ui:54
 msgid "Start Recording"
-msgstr "Fara Ricodin"
+msgstr "Fara recodin"
 
 #: src/byzanz-gui-window.ui:87
 msgid "Record whole screen"
-msgstr "Kayi Ricodin dukan screen"
+msgstr "Kayi recodin dukan screen"
 
 #: src/byzanz-gui-window.ui:103
 msgid "Record current screen"
